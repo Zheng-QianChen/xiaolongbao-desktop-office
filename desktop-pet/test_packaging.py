@@ -21,7 +21,7 @@ class PackagingTests(unittest.TestCase):
             with patch.dict(os.environ, {'LOCALAPPDATA':folder}, clear=True), patch.object(sys,'frozen',True,create=True):
                 self.assertEqual(app_paths.runtime_dir(),Path(folder)/'WangBun/runtime')
                 with patch.dict(os.environ, {'WANG_BUN_DATA_DIR':str(Path(folder)/'custom')}):
-                    self.assertEqual(app_paths.runtime_dir(),Path(folder)/'custom/runtime')
+                    self.assertEqual(app_paths.runtime_dir(),(Path(folder)/'custom').resolve()/'runtime')
 
     def test_frozen_mcp_and_hooks_use_console_dispatch(self):
         with patch.object(sys,'frozen',True,create=True), patch.object(sys,'executable',str(Path('C:/Pets/Wang Bun/WangBun.exe'))):
