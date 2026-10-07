@@ -47,6 +47,7 @@ def run(bundle, output):
             mcp=json.loads(cli('mcp','--print-config'))['mcpServers']['wang-bun']
             assert Path(mcp['command'])==bundle/'WangBun-cli.exe' and mcp['args'][0]=='mcp'
             requests=[{'jsonrpc':'2.0','id':1,'method':'initialize','params':{}},
+                      {'jsonrpc':'2.0','method':'notifications/initialized'},
                       {'jsonrpc':'2.0','id':2,'method':'tools/list','params':{}}]
             responses=[json.loads(line) for line in cli('mcp',input=''.join(json.dumps(r)+'\n' for r in requests).encode()).splitlines()]
             assert [r['id'] for r in responses]==[1,2]
@@ -58,7 +59,7 @@ def run(bundle, output):
             cli('publish','--channel','package','--create','Package test','--id','first','--title','Package notification')
             snap=json.loads(api('/api/snapshot'))
             assert any(t['thread_id']=='extension:package' for t in snap['tasks']);checks.append('frozen-publish-notification')
-            api('/api/settings',{'quiet':True})
+            api('/api/settings',{'always_on_top':False})
             duplicate=subprocess.run(command,cwd=root,env=env,timeout=5)
             assert duplicate.returncode==0 and pet.poll() is None
             checks.append('duplicate-launch-no-second-instance')
@@ -93,7 +94,7 @@ def run(bundle, output):
             sys.path.insert(0,str(Path(__file__).resolve().parent.parent))
             from bridge_store import Store
             store=Store(runtime/'state.sqlite3')
-            try: assert store.settings()['quiet']
+            try: assert store.settings()['always_on_top'] is False
             finally: store.close()
             checks.append('per-user-state-persisted')
         finally:
