@@ -3,6 +3,10 @@ import sys
 
 
 def main():
+    # JSON configs and redirected command output have one encoding on all
+    # Windows locales, including installation paths containing Chinese text.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, 'reconfigure'): stream.reconfigure(encoding='utf-8')
     if len(sys.argv) < 2 or sys.argv[1] in ('-h', '--help'):
         print('WangBun-cli: mcp | notify | publish | setup-hooks | run-job | --version')
         return 0
