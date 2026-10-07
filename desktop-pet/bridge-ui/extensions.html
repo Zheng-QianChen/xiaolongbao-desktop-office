@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>望包 · 订阅与助手</title><link rel="stylesheet" href="/extensions.css"></head>
+<body><header><div><a class="back" href="/">← 回到望包小屋</a><p class="eyebrow">望包的消息站</p><h1>关注的事情，交给望包。</h1><p class="muted">新游戏、项目进展、新邮件，在一处碰头。想聊聊时，望包也在。</p></div><span id="connection" class="pill">正在连接</span></header>
+<p id="message" role="status" aria-live="polite"></p>
+<main><section class="panel subscriptions"><div class="section-head"><div><p class="eyebrow">01 / 收消息</p><h2>我的订阅</h2></div><button id="new-connector">＋ 添加连接</button></div>
+<div id="connector-list"></div>
+<details id="connector-details" open><summary>连接设置</summary><form id="connector-form">
+<div class="pair"><label>类型<select id="kind"><option value="rss">RSS / Atom 订阅</option><option value="imap">邮箱 · IMAP SSL</option><option value="push">项目通知 · 本地推送</option></select></label><label>连接 ID<input id="connector-id" required pattern="[a-z0-9][a-z0-9_-]{0,47}" maxlength="48" placeholder="game-news" autocomplete="off"></label></div>
+<label>显示名称<input id="connector-name" required maxlength="60" placeholder="新游戏消息"></label>
+<div id="rss-fields"><label>订阅地址<input id="feed-url" type="url" placeholder="https://example.com/feed.xml"></label><label class="check"><input id="allow-local" type="checkbox">允许这个订阅访问本机或内网地址</label></div>
+<div id="imap-fields" hidden><div class="pair"><label>IMAP 主机<input id="mail-host" placeholder="imap.example.com"></label><label>SSL 端口<input id="mail-port" type="number" min="1" max="65535" value="993"></label></div><label>邮箱账号<input id="mail-user" autocomplete="username"></label><label>应用密码<input id="mail-password" type="password" autocomplete="new-password" placeholder="留空保留已有密码"></label><label>文件夹<input id="mail-folder" value="INBOX" maxlength="100"></label><p class="hint">只读取新邮件的标题和发件人，不改变邮箱已读状态。密码用当前 Windows 账户加密保存。更换主机或账号时请重新填写。</p></div>
+<p id="push-hint" class="hint" hidden>创建后，AI 可以通过 MCP 推送消息；其他本机脚本可使用此连接的独立密钥。不会向公网开放服务。</p>
+<div class="pair"><label id="interval-label">检查间隔（秒）<input id="interval" type="number" min="60" max="86400" value="300"></label><label class="check"><input id="connector-enabled" type="checkbox" checked>启用连接</label></div>
+<p id="baseline-hint" class="hint">第一次连接只记住已有内容，之后有新消息再叫你。</p>
+<div class="actions"><button class="primary" type="submit">保存连接</button><button type="button" id="reset-connector">取消编辑</button></div></form></details>
+<div id="push-secret" hidden><h3>此密钥仅显示一次</h3><p class="hint">只允许向这个连接推送消息。重新生成后，旧密钥立即失效。</p><pre id="push-example"></pre><button id="hide-secret">收起密钥</button></div>
+<details class="bridge-help"><summary>让其他 AI 帮我接入项目</summary><p class="hint">把下面的 MCP 配置加入你使用的 AI 客户端。望包运行时，它就能按你的要求添加 RSS、创建通知通道、暂停订阅和读取通知。</p><pre id="mcp-config"></pre><button id="copy-mcp">复制 MCP 配置</button><p class="hint">例如：“通过望包添加这个游戏的 RSS；首次不要提醒历史内容。” 邮箱密码和模型密钥在本页填写，无需发给 AI。</p></details>
+</section>
+<section class="panel assistant"><div class="section-head"><div><p class="eyebrow">02 / 聊一聊</p><h2>望包助手</h2></div><button id="clear-chat">清空对话</button></div>
+<details id="model-details" open><summary>模型连接 <span id="model-status" class="muted">尚未配置</span></summary><form id="model-form"><label>API 基础地址<input id="model-url" type="url" placeholder="https://你的服务/v1"></label><label>模型名称<input id="model-name" maxlength="200" placeholder="填写服务提供的模型 ID"></label><label>API Key<input id="model-key" type="password" autocomplete="new-password" placeholder="留空保留；本机无密钥服务可不填"></label>
+<div class="pair"><label>输出上限<input id="model-tokens" type="number" min="64" max="8192" value="1024"></label><label>输出参数<select id="token-field"><option value="max_tokens">max_tokens（常见兼容服务）</option><option value="max_completion_tokens">max_completion_tokens</option></select></label></div>
+<label class="check"><input id="model-enabled" type="checkbox">启用望包助手</label><label class="check"><input id="clear-key" type="checkbox">清除已保存的密钥</label><p class="hint">密钥用当前 Windows 账户加密保存。更换地址后请重填密钥。云端用 HTTPS，本机可填 http://127.0.0.1:端口/v1。保存不会调用模型。</p><button class="primary" type="submit">保存模型连接</button></form></details>
+<div id="conversation" role="log" aria-live="polite"><p class="chat-empty">等你配置好模型，就可以来找我聊天啦。</p></div>
+<form id="chat-form"><label class="sr-only" for="chat-input">给望包的消息</label><textarea id="chat-input" rows="3" maxlength="4000" placeholder="今天有什么想聊的？"></textarea><div class="actions"><span id="chat-status" class="hint">对话仅保留在当前页面</span><button class="primary" type="submit" id="send-chat">发送</button></div></form>
+<details id="summary-details"><summary>帮我整理通知</summary><p class="hint">勾选的标题和短摘要将发送到你配置的模型（最多 20 条）。不会附带邮件正文或 Agent 聊天记录，也不会标记已读。</p><div id="summary-notices"></div><div class="actions"><button id="refresh-notices">刷新通知</button><button id="summarize" class="primary" disabled>总结选中通知</button></div></details>
+</section></main><footer>订阅检查在望包运行时进行。AI 助手只在发送消息或点击摘要时调用模型；它目前没有执行命令或代发邮件的能力。</footer><script src="/extensions.js" type="module"></script></body></html>

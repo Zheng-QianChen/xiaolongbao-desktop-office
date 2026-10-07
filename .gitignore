@@ -1,0 +1,11 @@
+__pycache__/
+.venv/
+**/runtime/
+**/build/
+**/dist/
+**/release/
+**/.build-venv/
+**/build-tools/
+*.log
+*.sqlite*
+.env*

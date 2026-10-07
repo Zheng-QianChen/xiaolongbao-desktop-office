@@ -1,0 +1,404 @@
+{
+  "version": 8,
+  "name": "小笼望 · 分层动作集",
+  "canvas": [
+    321,
+    255
+  ],
+  "fps": 12,
+  "engine": "layered-canvas-prototype",
+  "cubism_compiled": false,
+  "coordinates": "viewer-left/right; only character-left forepaw is black",
+  "pivot": [
+    160,
+    219
+  ],
+  "layers": [
+    {
+      "id": "tail",
+      "label": "尾巴",
+      "file": "layers/tail.png",
+      "x": 233,
+      "y": 145,
+      "w": 80,
+      "h": 54,
+      "group": "body",
+      "pivot": [
+        239,
+        185
+      ]
+    },
+    {
+      "id": "dorsal_fin_top",
+      "label": "上背鳍",
+      "file": "layers/dorsal_fin_top.png",
+      "x": 222,
+      "y": 86,
+      "w": 38,
+      "h": 33,
+      "group": "body"
+    },
+    {
+      "id": "dorsal_fin_middle",
+      "label": "中背鳍",
+      "file": "layers/dorsal_fin_middle.png",
+      "x": 238,
+      "y": 114,
+      "w": 31,
+      "h": 27,
+      "group": "body"
+    },
+    {
+      "id": "dorsal_fin_bottom",
+      "label": "下背鳍",
+      "file": "layers/dorsal_fin_bottom.png",
+      "x": 245,
+      "y": 139,
+      "w": 31,
+      "h": 26,
+      "group": "body"
+    },
+    {
+      "id": "paw_rear_far",
+      "label": "远侧后爪",
+      "file": "layers/paw_rear_far.png",
+      "x": 111,
+      "y": 198,
+      "w": 23,
+      "h": 21,
+      "group": "body"
+    },
+    {
+      "id": "paw_rear_near",
+      "label": "近侧后爪",
+      "file": "layers/paw_rear_near.png",
+      "x": 209,
+      "y": 198,
+      "w": 25,
+      "h": 22,
+      "group": "body"
+    },
+    {
+      "id": "scarf_back",
+      "label": "围巾后片",
+      "file": "layers/scarf_back.png",
+      "x": 228,
+      "y": 176,
+      "w": 25,
+      "h": 42,
+      "group": "scarf"
+    },
+    {
+      "id": "body",
+      "label": "身体 / 三个包子褶 / 面皮",
+      "file": "layers/body.png",
+      "x": 71,
+      "y": 54,
+      "w": 184,
+      "h": 163,
+      "group": "body"
+    },
+    {
+      "id": "side_cross",
+      "label": "侧面标志",
+      "file": "layers/side_cross.png",
+      "x": 226,
+      "y": 139,
+      "w": 24,
+      "h": 36,
+      "group": "body"
+    },
+    {
+      "id": "horn_left",
+      "label": "画面左角",
+      "file": "layers/horn_left.png",
+      "x": 67,
+      "y": 57,
+      "w": 48,
+      "h": 55,
+      "group": "body"
+    },
+    {
+      "id": "horn_right",
+      "label": "画面右角",
+      "file": "layers/horn_right.png",
+      "x": 190,
+      "y": 57,
+      "w": 49,
+      "h": 58,
+      "group": "body"
+    },
+    {
+      "id": "brow_left",
+      "label": "左眉点",
+      "file": "layers/brow_left.png",
+      "x": 113,
+      "y": 128,
+      "w": 12,
+      "h": 8,
+      "group": "body",
+      "opacity": 0.72
+    },
+    {
+      "id": "brow_right",
+      "label": "右眉点",
+      "file": "layers/brow_right.png",
+      "x": 153,
+      "y": 128,
+      "w": 12,
+      "h": 8,
+      "group": "body",
+      "opacity": 0.72
+    },
+    {
+      "id": "mouth",
+      "label": "嘴巴",
+      "file": "layers/mouth.png",
+      "x": 132,
+      "y": 171,
+      "w": 11,
+      "h": 8,
+      "group": "body"
+    },
+    {
+      "id": "eye_left_color",
+      "label": "金色眼睛 / 下部",
+      "file": "layers/eye_left_color.png",
+      "x": 94,
+      "y": 154,
+      "w": 31,
+      "h": 23,
+      "group": "eye",
+      "eye": "eye_left",
+      "role": "color",
+      "opacity": 0.9
+    },
+    {
+      "id": "eye_left_lid",
+      "label": "金色眼睛 / 上眼睑",
+      "file": "layers/eye_left_lid.png",
+      "x": 94,
+      "y": 147,
+      "w": 31,
+      "h": 7,
+      "group": "eye",
+      "eye": "eye_left",
+      "role": "lid",
+      "opacity": 0.95
+    },
+    {
+      "id": "eye_right_color",
+      "label": "灰紫眼睛 / 下部",
+      "file": "layers/eye_right_color.png",
+      "x": 151,
+      "y": 154,
+      "w": 37,
+      "h": 23,
+      "group": "eye",
+      "eye": "eye_right",
+      "role": "color",
+      "opacity": 0.9
+    },
+    {
+      "id": "eye_right_lid",
+      "label": "灰紫眼睛 / 上眼睑",
+      "file": "layers/eye_right_lid.png",
+      "x": 151,
+      "y": 147,
+      "w": 37,
+      "h": 7,
+      "group": "eye",
+      "eye": "eye_right",
+      "role": "lid",
+      "opacity": 0.95
+    },
+    {
+      "id": "glasses",
+      "label": "透明眼镜",
+      "file": "layers/glasses.png",
+      "x": 83,
+      "y": 137,
+      "w": 112,
+      "h": 43,
+      "group": "work"
+    },
+    {
+      "id": "scarf_front",
+      "label": "围巾前片",
+      "file": "layers/scarf_front.png",
+      "x": 81,
+      "y": 181,
+      "w": 169,
+      "h": 54,
+      "group": "scarf"
+    },
+    {
+      "id": "laptop_keyboard",
+      "label": "电脑 / 键盘底座",
+      "file": "layers/laptop_keyboard.png",
+      "x": 55,
+      "y": 202,
+      "w": 137,
+      "h": 44,
+      "group": "desk"
+    },
+    {
+      "id": "laptop_closed",
+      "label": "电脑 / 合盖",
+      "file": "layers/laptop_closed.png",
+      "x": 55,
+      "y": 202,
+      "w": 137,
+      "h": 44,
+      "group": "closed"
+    },
+    {
+      "id": "cup",
+      "label": "水杯",
+      "file": "layers/cup.png",
+      "x": 218,
+      "y": 218,
+      "w": 33,
+      "h": 27,
+      "group": "cup"
+    },
+    {
+      "id": "paw_front_white",
+      "label": "右前爪 / 白色",
+      "file": "layers/paw_front_white.png",
+      "x": 88,
+      "y": 198,
+      "w": 30,
+      "h": 29,
+      "group": "paw",
+      "work": [
+        98,
+        211
+      ],
+      "phase": 0
+    },
+    {
+      "id": "paw_front_black",
+      "label": "左前爪 / 黑色",
+      "file": "layers/paw_front_black.png",
+      "x": 167,
+      "y": 202,
+      "w": 32,
+      "h": 30,
+      "group": "paw",
+      "work": [
+        140,
+        213
+      ],
+      "phase": 3.141592653589793
+    },
+    {
+      "id": "laptop_screen",
+      "label": "电脑 / 前景屏幕背板",
+      "file": "layers/laptop_screen.png",
+      "x": 44,
+      "y": 159,
+      "w": 96,
+      "h": 87,
+      "group": "desk"
+    },
+    {
+      "id": "body_blank",
+      "label": "转身 / 白色身体底图",
+      "file": "layers/body_blank.png",
+      "x": 71,
+      "y": 54,
+      "w": 184,
+      "h": 163,
+      "group": "alternate"
+    },
+    {
+      "id": "face_patch",
+      "label": "转身 / 独立面皮",
+      "file": "layers/face_patch.png",
+      "x": 89,
+      "y": 107,
+      "w": 106,
+      "h": 85,
+      "group": "alternate"
+    },
+    {
+      "id": "skill_1",
+      "label": "技能1 / 取势",
+      "file": "layers/skill_1.png",
+      "x": 214,
+      "y": 17,
+      "w": 36,
+      "h": 36,
+      "group": "effect"
+    },
+    {
+      "id": "skill_2",
+      "label": "技能2 / 连星",
+      "file": "layers/skill_2.png",
+      "x": 214,
+      "y": 17,
+      "w": 36,
+      "h": 36,
+      "group": "effect"
+    },
+    {
+      "id": "skill_3",
+      "label": "技能3 / 天下劫",
+      "file": "layers/skill_3.png",
+      "x": 214,
+      "y": 17,
+      "w": 36,
+      "h": 36,
+      "group": "effect"
+    },
+    {
+      "id": "skill_ready",
+      "label": "技能就绪 / 黄色菱形",
+      "file": "layers/skill_ready.png",
+      "x": 116,
+      "y": -8,
+      "w": 42,
+      "h": 42,
+      "group": "effect"
+    },
+    {
+      "id": "cat_body",
+      "label": "望的猫 / 身体",
+      "file": "layers/cat_body.png",
+      "x": -13,
+      "y": 146,
+      "w": 67,
+      "h": 79,
+      "group": "companion"
+    },
+    {
+      "id": "cat_paw",
+      "label": "望的猫 / 落子前爪",
+      "file": "layers/cat_paw.png",
+      "x": 34,
+      "y": 208,
+      "w": 21,
+      "h": 13,
+      "group": "companion"
+    }
+  ],
+  "parameters": {
+    "breath": [
+      0,
+      1
+    ],
+    "eyeOpen": [
+      0,
+      1
+    ],
+    "typing": [
+      0,
+      1
+    ],
+    "scarf": [
+      0,
+      1
+    ]
+  }
+}

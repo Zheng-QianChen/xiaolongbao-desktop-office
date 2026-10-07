@@ -1,0 +1,10 @@
+__pycache__/
+runtime/
+.build-venv/
+build-tools/
+build/
+dist/
+release/
+*.log
+*.sqlite*
+*.pet-backup-*
