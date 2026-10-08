@@ -50,7 +50,7 @@ def main():
         subprocess.run([str(args.iscc),'/DAppVersion='+VERSION,str(ROOT/'packaging/installer.iss')],check=True)
     artifacts = [archive]
     if args.iscc: artifacts.append(release/f'{APP_NAME}-{VERSION}-windows-x64-setup.exe')
-    (release/'SHA256SUMS.txt').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.name+'\n' for p in artifacts))
+    (release/'SHA256SUMS.txt').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.name+'\n' for p in artifacts),encoding='utf-8')
     print('RELEASE_READY '+str(release))
 
 
