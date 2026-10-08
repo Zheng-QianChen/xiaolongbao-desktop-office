@@ -15,6 +15,7 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install -r desktop-pet/requirements-build.txt
       - run: python -m unittest discover -s desktop-pet -p "test_*.py"
+      - run: node desktop-pet/test_provider_plugins.cjs
       - run: python desktop-pet/packaging/build_windows.py
       - uses: actions/upload-artifact@v4
         with:

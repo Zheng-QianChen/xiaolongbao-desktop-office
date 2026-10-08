@@ -35,6 +35,9 @@ def allowed_url(value, external=False):
 
 
 def open_conversation(task, opener=None):
+    if task['source']=='cursor':
+        from cursor_navigation import CursorNavigator
+        return CursorNavigator(opener=opener).open(task['thread_id'])
     url=task.get('open_url') or conversation_url(task['source'],task['thread_id'])
     if not allowed_url(url, external=task['source']=='local' and task['thread_id'].startswith('extension:')):return False
     if opener is None:

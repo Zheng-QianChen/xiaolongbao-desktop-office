@@ -16,6 +16,7 @@ from gui_observers import GuiObservers
 from extension_hub import ExtensionHub, PushAuthError
 from extension_io import ExtensionError
 from app_paths import runtime_dir
+from cursor_navigation import CursorNavigator, NavigationError
 
 ROOT = Path(__file__).resolve().parent
 DEFAULT_RUNTIME = runtime_dir() / 'bridge'
@@ -26,8 +27,9 @@ def connection_file(runtime):
     return Path(runtime) / 'connection.json'
 
 
-def build_server(store, token, port=0, clones=None, extensions=None):
+def build_server(store, token, port=0, clones=None, extensions=None, cursor_navigator=None):
     connections = CodexConnections(clones) if clones else None
+    cursor_navigator = cursor_navigator or CursorNavigator()
     class Handler(BaseHTTPRequestHandler):
         def handle_one_request(self):
             try:
@@ -170,6 +172,13 @@ def build_server(store, token, port=0, clones=None, extensions=None):
                     return self.reply(200, result)
                 if self.path == '/api/events':
                     return self.reply(200, store.ingest(value))
+                if self.path == '/api/open':
+                    key = value.get('task_id') if isinstance(value, dict) else None
+                    if not isinstance(key, str): return self.reply(400, {'error':'请指定会话。'})
+                    task = store.task(key)
+                    if not task or task['source'] != 'cursor':
+                        return self.reply(404, {'error':'未找到对应的 Cursor 会话。'})
+                    return self.reply(200, {'opened':cursor_navigator.open(task['thread_id'])})
                 if self.path == '/api/read' and isinstance(value, dict):
                     return self.reply(200, store.acknowledge(value.get('ids')))
                 if self.path == '/api/settings':
@@ -179,6 +188,8 @@ def build_server(store, token, port=0, clones=None, extensions=None):
                         return self.reply(503, {'error': '当前桥服务未启用会话管理。'})
                     return self.reply(200, connections.add(value))
                 self.reply(404, {'error': 'unknown endpoint'})
+            except NavigationError as error:
+                self.reply(409, {'error':str(error)})
             except ConnectionError as error:
                 self.reply(error.status, {'error': str(error)})
             except ExtensionError as error:
@@ -224,10 +235,13 @@ class BridgeService:
         if not discovery: self.store.update_settings({'auto_discover':False})
         self.clones = CloneObserver(runtime, self.store)
         self.guis = GuiObservers(runtime, self.store)
+        self.cursor_navigator = CursorNavigator()
+        self.guis.cursor_navigator = self.cursor_navigator
         self.extensions = ExtensionHub(runtime, self.store)
         token = secrets.token_urlsafe(32)
         try:
-            self.server = build_server(self.store, token, port, clones=self.clones, extensions=self.extensions)
+            self.server = build_server(self.store, token, port, clones=self.clones, extensions=self.extensions,
+                                       cursor_navigator=self.cursor_navigator)
         except Exception:
             self.extensions.close()
             self.store.close()

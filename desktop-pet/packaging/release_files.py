@@ -4,11 +4,11 @@ from pathlib import Path
 
 MODULES = '''app_paths asset_config desktop_app cli bounce bridge bridge_adapters bridge_client
 bridge_store codex_clones codex_connections codex_read_state events extension_hub extension_io
-family gui_observers launch_bridge motion native_connections native_labels native_scene
+family gui_observers cursor_navigation launch_bridge motion native_connections native_labels native_scene
 native_settings native_zoom notify pet_mcp presentation_layout provider_links publish_notification
 rendering run_job setup_hooks subscription_readers travel workstations'''.split()
 TESTS = '''bridge codex_clones codex_connections events extensions family lifecycle native_scene
-presentation_layout rendering travel workstations packaging'''.split()
+presentation_layout rendering travel workstations packaging cursor_navigation'''.split()
 ART_JS = ['renderer.js','geometry.js','layer-turn.js','motions.js']
 
 
@@ -36,7 +36,7 @@ def source_files(root):
     paths += [root/(name+'.py') for name in MODULES]
     paths += [root/('test_'+name+'.py') for name in TESTS]
     paths += [root/p for p in ['requirements.txt','requirements-build.txt','.gitignore',
-                               'LICENSE','ASSETS.md','THIRD_PARTY_NOTICES.md']]
+                               'LICENSE','ASSETS.md','THIRD_PARTY_NOTICES.md','test_provider_plugins.cjs']]
     paths += [root/'packaging'/p for p in ['release_files.py','export_source.py','build_windows.py',
               'wangbun.spec','installer.iss','README.public.md','release-notes.md','ci.yml','verify_package.py']]
     paths += list((root/'packaging/licenses').glob('*.txt'))

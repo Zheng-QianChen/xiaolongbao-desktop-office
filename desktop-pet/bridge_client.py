@@ -21,7 +21,7 @@ class BridgeClient:
         self.thread = threading.Thread(target=self._poll, daemon=True)
         self.thread.start()
 
-    def request(self, endpoint, data=None):
+    def request(self, endpoint, data=None, timeout=1.5):
         config = json.loads((self.runtime/'connection.json').read_text(encoding='utf-8'))
         url = urlsplit(config['url'])
         if url.scheme != 'http' or url.hostname != '127.0.0.1' or url.username or url.path:
@@ -30,7 +30,7 @@ class BridgeClient:
         req = urllib.request.Request(config['url']+endpoint, body,
                                      {'Authorization': 'Bearer '+config['token'], 'Content-Type': 'application/json'})
         # Ignore global proxies for the private loopback endpoint.
-        with urllib.request.build_opener(urllib.request.ProxyHandler({})).open(req, timeout=1.5) as response:
+        with urllib.request.build_opener(urllib.request.ProxyHandler({})).open(req, timeout=timeout) as response:
             return json.load(response)
 
     def _publish(self, result):

@@ -6,7 +6,7 @@ import sys
 ROOT = Path(__file__).resolve().parent
 APP_NAME = '小笼包桌面事务所'
 PACKAGE_NAME = 'Xiaolongbao-Desktop-Office'
-VERSION = '0.1.2'
+VERSION = '0.1.3'
 
 
 def data_root():

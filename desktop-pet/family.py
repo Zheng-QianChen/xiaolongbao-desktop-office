@@ -6,6 +6,8 @@ import tkinter as tk
 from tkinter import font as tkfont
 import json
 import traceback
+import threading
+import queue
 from pathlib import Path
 from PIL import Image, ImageTk
 from events import EventTail
@@ -288,11 +290,40 @@ def main():
         page=(page+(1 if e.delta<0 else -1))%pages
         last_layout=None
 
+    cursor_opening = False
     def read_worker(key):
+        nonlocal cursor_opening
         worker=workers.items.get(key)
         if bridge and worker:
             from provider_links import open_conversation
             task=next((t for t in (bridge_snapshot or {}).get('tasks',[]) if t['id']==key),None)
+            if task and task['source']=='cursor':
+                if cursor_opening:return
+                cursor_opening=True
+                result=queue.Queue()
+                def navigate():
+                    import urllib.error
+                    try:
+                        bridge.request('/api/open',{'task_id':key},timeout=15)
+                        result.put(None)
+                    except urllib.error.HTTPError as error:
+                        try:message=json.load(error).get('error','暂时无法定位原窗口。')
+                        except (ValueError,OSError):message='暂时无法定位原窗口。'
+                        result.put(message)
+                    except (OSError,ValueError,KeyError,TypeError):
+                        result.put('Cursor 窗口定位暂时不可用，请稍后重试。')
+                def finish_navigation():
+                    nonlocal cursor_opening
+                    try:message=result.get_nowait()
+                    except queue.Empty:
+                        root.after(100,finish_navigation);return
+                    cursor_opening=False
+                    if message:
+                        from tkinter import messagebox
+                        messagebox.showinfo('打开 Cursor 会话',message+'\n未读状态会保留。',parent=root)
+                threading.Thread(target=navigate,daemon=True).start()
+                root.after(100,finish_navigation)
+                return
             try:opened=bool(task and open_conversation(task))
             except OSError:opened=False
             if not opened:

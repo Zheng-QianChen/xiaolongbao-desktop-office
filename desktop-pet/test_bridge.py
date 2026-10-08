@@ -7,6 +7,8 @@ import sys
 import tempfile
 import threading
 import unittest
+from unittest.mock import Mock
+from cursor_navigation import NavigationError
 
 from bridge import build_server, drain_spool
 from bridge_adapters import hook_event, app_server_event
@@ -265,7 +267,9 @@ class HttpTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.store = Store(Path(self.tmp.name)/'state.sqlite3')
-        self.server = build_server(self.store, 'test-token')
+        self.navigator = Mock()
+        self.navigator.open.return_value=True
+        self.server = build_server(self.store, 'test-token', cursor_navigator=self.navigator)
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
 
@@ -304,6 +308,22 @@ class HttpTests(unittest.TestCase):
         self.assertTrue(data['settings']['movement_locked'])
         self.assertEqual(len(data['connections']['sources']),6)
         self.assertEqual(self.request('POST','/api/settings',{'unknown':True})[0],400)
+
+    def test_cursor_navigation_keeps_unread_and_only_accepts_known_tasks(self):
+        cid='11111111-1111-4111-8111-111111111111'
+        result=self.store.ingest(make_event('cursor',cid,'completed',run_id='r1'))
+        key=result['task_id'];before=self.store.snapshot()['unread_count']
+        self.assertEqual(self.request('POST','/api/open',{'task_id':key},{'Authorization':''})[0],401)
+        self.assertEqual(self.request('POST','/api/open',{'task_id':'missing'})[0],404)
+        self.assertEqual(self.request('POST','/api/open',{'url':'cursor://arbitrary'})[0],400)
+        self.navigator.open.assert_not_called()
+        self.assertEqual(self.request('POST','/api/open',{'task_id':key})[0],200)
+        self.navigator.open.assert_called_once_with(cid)
+        self.assertEqual(self.store.snapshot()['unread_count'],before)
+        self.navigator.open.side_effect=NavigationError('原窗口已关闭')
+        status,body=self.request('POST','/api/open',{'task_id':key})
+        self.assertEqual(status,409);self.assertEqual(json.loads(body)['error'],'原窗口已关闭')
+        self.assertEqual(self.store.snapshot()['unread_count'],before)
 
     def test_cross_origin_rebinding_and_unauthorized_writes_rejected(self):
         event = make_event('local', 'x', 'started')

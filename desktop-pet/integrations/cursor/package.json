@@ -2,7 +2,7 @@
   "name": "local-monitor",
   "displayName": "望包 · 打开 Cursor 会话",
   "description": "仅在点击望包分身时打开指定的本地会话。",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "wang-bun",
   "engines": {"vscode": "^1.90.0"},
   "activationEvents": ["onUri"],

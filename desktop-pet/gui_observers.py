@@ -106,6 +106,8 @@ class GuiObservers:
                     continue
                 rows=reader(path)
                 for row in rows:self.project(source,row)
+                if source=='cursor' and getattr(self,'cursor_navigator',None):
+                    self.cursor_navigator.schedule_observe(rows)
                 self.store.provider_status[source]='已连接 · 自动发现任务' if path.exists() else '尚未发现本机数据'
             except (OSError,sqlite3.Error,ValueError,TypeError):
                 self.store.provider_status[source]='暂时无法读取状态，保留未读结果'

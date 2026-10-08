@@ -41,14 +41,25 @@ async function api(path,body){
 }
 function node(tag,text,className){const el=document.createElement(tag);el.textContent=text;if(className)el.className=className;return el;}
 function taskUrl(t){
+  if(t.source==='cursor')return '#cursor-conversation';
   if(t.open_url){try{const u=new URL(t.open_url);
     if(t.source==='local'&&t.thread_id?.startsWith('extension:')&&['http:','https:'].includes(u.protocol)&&!u.username&&!u.password)return u.href;
     if(u.protocol==='codex:'&&u.host==='threads'||u.protocol==='zcode:'&&u.host==='workspace'&&u.pathname==='/open'||u.protocol==='cursor:'&&u.host==='wang-bun.local-monitor'&&u.pathname==='/open')return u.href;
   }catch{}}
   return t.source==='codex'&&/^[0-9a-f-]{36}$/i.test(t.thread_id)?'codex://threads/'+encodeURIComponent(t.thread_id):null;
 }
+let cursorOpening=false;
+async function openCursor(t,event){
+  event?.preventDefault();
+  if(cursorOpening)return;
+  cursorOpening=true;
+  try{await api('open',{task_id:t.task_id??t.id});$('error').textContent='';}
+  catch(error){$('error').textContent=error.message+' 未读状态会保留。';}
+  finally{cursorOpening=false;}
+}
 $('office').addEventListener('dblclick',event=>{
   const t=snapshot?.tasks.find(t=>t.id===scene.taskAt(event)),url=t&&taskUrl(t);
+  if(t?.source==='cursor'){openCursor(t,event);return;}
   if(url)window.location.href=url;
   else if(t)$('error').textContent='此来源暂不支持会话跳转，请在原软件打开对应任务。未读状态会保留。';
 });
@@ -68,7 +79,7 @@ function renderInbox(){
     if(!n.read&&n.read_mode!=='app'){const b=node('button','确认已查看');b.onclick=()=>acknowledge([n.id]);row.append(b);}
     if(!n.read&&n.read_mode==='app')row.append(node('small','已读跟随原软件'));
     if(taskUrl(n)){
-      const link=node('a',n.source==='zcode'?'打开所在工作区':n.source==='local'?'查看原文':'打开会话','action');link.href=taskUrl(n);if(n.source==='local'){link.target='_blank';link.rel='noopener noreferrer';}row.append(link);
+      const link=node('a',n.source==='zcode'?'打开所在工作区':n.source==='local'?'查看原文':'打开会话','action');link.href=taskUrl(n);if(n.source==='cursor')link.onclick=e=>openCursor(n,e);if(n.source==='local'){link.target='_blank';link.rel='noopener noreferrer';}row.append(link);
     }
     row.append(node('small',new Date(n.created_at*1000).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})));
     card.append(row);list.append(card);
@@ -91,7 +102,7 @@ function renderTasks(){
     if(t.retire_at)card.append(node('small','收工归队，稍后离开'));
     else if(t.read_mode==='app'&&!t.read_known)card.append(node('small','等待原软件的已读状态'));
     if(taskUrl(t)){
-      const link=node('a',t.source==='zcode'?'打开所在工作区':'打开对应会话','action');link.href=taskUrl(t);card.append(link);
+      const link=node('a',t.source==='zcode'?'打开所在工作区':'打开对应会话','action');link.href=taskUrl(t);if(t.source==='cursor')link.onclick=e=>openCursor(t,e);card.append(link);
     }
     panel.append(card);
   }

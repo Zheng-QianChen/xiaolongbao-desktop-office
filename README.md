@@ -19,7 +19,8 @@
 
 - 自动观察 Codex、Cursor 和 ZCode 的本地 GUI 会话状态。Codex/Cursor 的未读跟随原软件；双击小包子跳转会话，不伪造已读。ZCode 当前仅能跳转工作区。
 - Claude Code 使用自愿安装的通知 hooks；DeepSeekHarness 提供 `desktop-pet/integrations/dsh/wang-bun.mjs` 插件。TUI 不推测已读，可在面板确认。
-- Cursor 精确会话跳转需要附带的扩展源码：运行 `python desktop-pet/integrations/cursor/build_vsix.py`，再在 Cursor 中安装生成的 VSIX。
+- Cursor 跳转会核对当前窗口，并在任务运行时记录窗口归属。Agents 窗使用 Cursor 内置入口；代码编辑窗需要附带扩展：运行 `python desktop-pet/integrations/cursor/build_vsix.py`，再在 Cursor 中安装生成的 VSIX（0.1.1 或更新）。原窗口已关闭或多个窗口无法确定归属时会提示，未读状态继续跟随 Cursor。
+- 当前窗口定位适配 Windows Cursor 3.14 的状态输出；多个尚未建立归属的 Agents 窗、同名工作区、会话同时属于两种窗口时不会猜测或随意打开。Cursor 升级导致接口改变时也会保留通知并提示。
 - 完成未读的小包子保留在大望包身边；原软件确认已读后停留 9 秒再离开。任务再次运行时重新分配共享工位。
 - 归档会话也会收工离开，不再被未读蓝点唤回；不修改原软件的已读状态。其他接入可发送 `archived` / `unarchived` 事件。
 - 断线时推开电脑、趴下并冒出小幽灵，恢复连接后继续工作。大包子在全部已读后可以与猫咪下棋。
