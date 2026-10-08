@@ -8,8 +8,8 @@
 
 从本仓库 Releases 下载：
 
-- `小笼包桌面事务所-0.1.1-windows-x64-setup.exe`：当前用户安装，提供开始菜单入口和卸载程序。
-- `小笼包桌面事务所-0.1.1-windows-x64-portable.zip`：完整解压后双击 `WangBun.exe`，保留旁边的 `_internal` 文件夹。
+- `Xiaolongbao-Desktop-Office-0.1.1-windows-x64-setup.exe`：当前用户安装，提供开始菜单入口和卸载程序。
+- `Xiaolongbao-Desktop-Office-0.1.1-windows-x64-portable.zip`：完整解压后双击 `WangBun.exe`，保留旁边的 `_internal` 文件夹。
 
 两种版本均自带 Python、Tk 和图片资源，无需额外安装运行环境。不自动添加开机启动。预览版没有代码签名；`SHA256SUMS.txt` 提供文件校验值。
 

@@ -10,7 +10,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from app_paths import APP_NAME, VERSION
+from app_paths import PACKAGE_NAME, VERSION
 
 
 def main():
@@ -42,14 +42,14 @@ def main():
         if source.is_file(): shutil.copy2(source,licenses/(source.parent.name+'-'+source.name))
     release = ROOT/'release'
     release.mkdir(exist_ok=True)
-    archive = release/f'{APP_NAME}-{VERSION}-windows-x64-portable.zip'
+    archive = release/f'{PACKAGE_NAME}-{VERSION}-windows-x64-portable.zip'
     with zipfile.ZipFile(archive,'w',zipfile.ZIP_DEFLATED,compresslevel=6) as zipped:
         for path in sorted(bundle.rglob('*')):
             if path.is_file(): zipped.write(path,path.relative_to(bundle.parent))
     if args.iscc:
         subprocess.run([str(args.iscc),'/DAppVersion='+VERSION,str(ROOT/'packaging/installer.iss')],check=True)
     artifacts = [archive]
-    if args.iscc: artifacts.append(release/f'{APP_NAME}-{VERSION}-windows-x64-setup.exe')
+    if args.iscc: artifacts.append(release/f'{PACKAGE_NAME}-{VERSION}-windows-x64-setup.exe')
     (release/'SHA256SUMS.txt').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.name+'\n' for p in artifacts),encoding='utf-8')
     print('RELEASE_READY '+str(release))
 
