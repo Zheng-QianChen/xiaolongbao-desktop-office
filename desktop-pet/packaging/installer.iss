@@ -1,18 +1,18 @@
 #ifndef AppVersion
-  #define AppVersion "0.1.0"
+  #define AppVersion "0.1.1"
 #endif
 [Setup]
 AppId={{C074DA51-C0E3-41B3-A3D2-33D12715BD09}
-AppName=望包桌宠
+AppName=小笼包桌面事务所
 AppVersion={#AppVersion}
 AppPublisher=Wang Bun contributors
 DefaultDirName={localappdata}\Programs\WangBun
-DefaultGroupName=望包桌宠
+DefaultGroupName=小笼包桌面事务所
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir=..\release
-OutputBaseFilename=WangBun-{#AppVersion}-windows-x64-setup
+OutputBaseFilename=小笼包桌面事务所-{#AppVersion}-windows-x64-setup
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -29,10 +29,10 @@ Name: desktopicon; Description: "创建桌面快捷方式"; Flags: unchecked
 Source: "..\dist\WangBun\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{group}\望包桌宠"; Filename: "{app}\WangBun.exe"
-Name: "{group}\卸载望包桌宠"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\望包桌宠"; Filename: "{app}\WangBun.exe"; Tasks: desktopicon
+Name: "{group}\小笼包桌面事务所"; Filename: "{app}\WangBun.exe"
+Name: "{group}\卸载小笼包桌面事务所"; Filename: "{uninstallexe}"
+Name: "{autodesktop}\小笼包桌面事务所"; Filename: "{app}\WangBun.exe"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\WangBun.exe"; Description: "启动望包桌宠"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\WangBun.exe"; Description: "启动小笼包桌面事务所"; Flags: nowait postinstall skipifsilent
 ; User state in {localappdata}\WangBun intentionally survives uninstall.

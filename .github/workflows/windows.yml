@@ -18,5 +18,5 @@ jobs:
       - run: python desktop-pet/packaging/build_windows.py
       - uses: actions/upload-artifact@v4
         with:
-          name: WangBun-windows-x64
+          name: Xiaolongbao-Desktop-Office-windows-x64
           path: desktop-pet/release/*

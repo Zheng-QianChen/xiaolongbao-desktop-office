@@ -18,7 +18,7 @@ from native_labels import elide,sign_text,wrap_details
 from native_zoom import ZoomCanvas,SCALE_LEVELS
 from presentation_layout import PresentationLayout,reunion_offset
 from asset_config import FRAME_WIDTH,FRAME_HEIGHT,LEFT_PADDING,OUT,COUNTS
-from app_paths import runtime_dir
+from app_paths import APP_NAME,runtime_dir
 
 ROOT = Path(__file__).resolve().parent
 RUNTIME = runtime_dir()
@@ -62,7 +62,7 @@ def main():
     if not args.demo and not bridge:workers.restore(snapshot,time.monotonic())
     root=tk.Tk()
     scene=NativeScene(None if args.smoke_test or args.demo else RUNTIME/'family-scene.json')
-    root.title('望包桌宠' if args.bridge else '大小望包 · '+('演示' if args.demo else '事件模式'))
+    root.title(APP_NAME if args.bridge else APP_NAME+' · '+('演示' if args.demo else '事件模式'))
     root.overrideredirect(True)
     root.attributes('-topmost',True)
     root.configure(bg=COLOR_KEY)

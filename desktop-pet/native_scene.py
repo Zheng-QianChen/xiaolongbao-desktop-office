@@ -74,7 +74,7 @@ def draw_house(canvas, columns, rows):
         rect(mid-half,y,half*2,3,'#708665')
     rect(left-13,108,right-left+26,9,'#5c715c')
     rect(mid-57,99,114,27,'#685f4b');rect(mid-54,102,108,21,'#f1e3bf')
-    canvas.create_text(mid,113,text='望 包 小 屋',fill='#53644f',font=('Microsoft YaHei UI',-12,'bold'),tags='house')
+    canvas.create_text(mid,113,text='小笼包桌面事务所',fill='#53644f',font=('Microsoft YaHei UI',-12,'bold'),tags='house')
     rect(left-10,bottom+5,right-left+20,8,'#74644e')
     rect(left-23,151,4,34,'#79644d');rect(left-32,150,20,4,'#79644d');rect(left-30,155,16,19,'#e9c775')
     rect(left-51,bottom-16,23,25,'#bd8b65');rect(left-54,bottom-20,29,6,'#d7a579')

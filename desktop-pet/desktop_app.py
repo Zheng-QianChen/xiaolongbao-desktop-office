@@ -39,7 +39,7 @@ def main():
     args = parser.parse_args()
     if args.data_dir:
         os.environ['WANG_BUN_DATA_DIR'] = str(args.data_dir.resolve())
-    from app_paths import runtime_dir
+    from app_paths import APP_NAME, runtime_dir
     runtime = runtime_dir()
     runtime.mkdir(parents=True, exist_ok=True)
     try:
@@ -74,7 +74,7 @@ def main():
                     import tkinter as tk
                     from tkinter import messagebox
                     root = tk.Tk(); root.withdraw()
-                    messagebox.showerror('望包启动失败', '请查看本地日志：\n'+str(runtime/'desktop.log'))
+                    messagebox.showerror(APP_NAME+' · 启动失败', '请查看本地日志：\n'+str(runtime/'desktop.log'))
                     root.destroy()
             finally:
                 if service: service.close()

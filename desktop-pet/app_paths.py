@@ -4,7 +4,8 @@ from pathlib import Path
 import sys
 
 ROOT = Path(__file__).resolve().parent
-VERSION = '0.1.0'
+APP_NAME = '小笼包桌面事务所'
+VERSION = '0.1.1'
 
 
 def data_root():

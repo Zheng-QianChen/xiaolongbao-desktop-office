@@ -2,13 +2,14 @@
 import tkinter as tk
 from tkinter import ttk
 from native_labels import wrap_details
+from app_paths import APP_NAME
 
 
 class SettingsWindow:
     def __init__(self,root,font,client,snapshot):
         self.client,self.snapshot,self.pending=client,snapshot,None
         self.window=tk.Toplevel(root)
-        self.window.title('望包设置 · 连接与显示')
+        self.window.title(APP_NAME+' · 连接与显示')
         self.window.configure(bg='#f5f2e8')
         self.window.attributes('-topmost',True)
         self.window.geometry('510x610')
@@ -17,7 +18,7 @@ class SettingsWindow:
         self.preferences={};self.sources={};self.tasks={}
         self.codex_window=None
         self.catalog_signature=None
-        tk.Label(self.window,text='望包设置',font=('Microsoft YaHei UI',-18,'bold'),bg='#f5f2e8',fg='#315449').pack(anchor='w',padx=18,pady=(16,8))
+        tk.Label(self.window,text=APP_NAME,font=('Microsoft YaHei UI',-18,'bold'),bg='#f5f2e8',fg='#315449').pack(anchor='w',padx=18,pady=(16,8))
         tk.Label(self.window,text='任务开始时自动分配工位，已读后归队离开。\n关闭连接会暂停监控，保留已有通知。',font=font,bg='#f5f2e8',fg='#687a6a',justify='left').pack(anchor='w',padx=18,pady=(0,10))
         controls=tk.Frame(self.window,bg='#f5f2e8');controls.pack(fill='x',padx=18)
         for key,label in [('movement_locked','锁定移动（角色和整组窗口）'),('always_on_top','桌宠置顶'),('show_labels','显示工位文字'),('auto_discover','自动发现 Codex / Cursor / ZCode 任务')]:

@@ -99,7 +99,7 @@ export function drawHouse(c){
   // Porch light and nameplate.
   rect(322,153,4,48,'#79644d');rect(310,152,25,4,'#79644d');rect(313,158,18,21,'#e9c775');rect(310,179,24,4,'#79644d');
   rect(458,112,126,27,'#685f4b');rect(461,115,120,21,'#f1e3bf');
-  c.fillStyle='#53644f';c.font='bold 12px "Microsoft YaHei UI",sans-serif';c.textAlign='center';c.fillText('望 包 小 屋',521,130);
+  c.fillStyle='#53644f';c.font='bold 12px "Microsoft YaHei UI",sans-serif';c.textAlign='center';c.fillText('小笼包桌面事务所',521,130);
   // Low desks are below the actors; paws and laptops remain visible.
   for(const y of [212,365])for(const x of [363,473,583]){
     rect(x+6,y+9,5,23,'#937354');rect(x+87,y+9,5,23,'#937354');
