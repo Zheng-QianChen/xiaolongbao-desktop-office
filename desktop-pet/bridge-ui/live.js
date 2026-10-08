@@ -129,6 +129,7 @@ async function poll(){
   finally{polling=false;}
 }
 function taskMotion(task,now){
+  if(task.archived){const age=Math.max(0,now-tracks.get(task.id).start);return age<3.5?['closing',age]:age<6.5?['walk',age-3.5]:['following',age-6.5];}
   if(!online)return ['disconnected',Math.max(0,now-(lostAt??lastSuccess))];
   if(task.display_state==='disconnected')return ['disconnected',Math.max(0,now-tracks.get(task.id).offlineAt)];
   const track=tracks.get(task.id), age=Math.max(0,now-track.start), state=task.display_state;
@@ -173,7 +174,7 @@ function animate(ms){
       if(deskSlot(t)!==null&&action==='return')renderer.drawModel(ctx,animator.sample('closing',3.5),{...desk,scale:1/3,only:['laptop_screen','laptop_keyboard','glasses','cup'],effects:false});
       pos=scene.position(t.id,pos);
       tracks.get(t.id).lastPosition={...pos};
-      const p=animator.sample(action,age,{fps:12,agentName:t.label,seed:i+1,failureRoll:t.failure_roll});
+      const p=animator.sample(action,age,{fps:12,role:'worker',agentName:t.label,seed:i+1,failureRoll:t.failure_roll});
       const record={key:t.id,...pos,scale:1/3,paint:c=>renderer.drawModel(c,p,{companion:false})};
       scene.selection(ctx,record);renderer.drawModel(ctx,p,{...pos,scale:1/3,companion:false});records.push(record);
       const labelAt=desk, labelY=house?84:88;

@@ -2,14 +2,14 @@
 
 让本机 AI 任务变成桌边的小包子：开工时进屋，收工后合上电脑，回来挤在大望包身边。所有软件共用工位，归队的小包子不随小屋翻页消失。
 
-这是 Windows 10/11 x64 本地桌宠，包含透明桌面窗口、浏览器通知面板和消息桥。当前版本是 **0.1.1 预览版**。软件正式名称为「小笼包桌面事务所」，主角仍叫望包 / 小笼望。
+这是 Windows 10/11 x64 本地桌宠，包含透明桌面窗口、浏览器通知面板和消息桥。当前版本是 **0.1.2 预览版**。软件正式名称为「小笼包桌面事务所」，主角仍叫望包 / 小笼望。
 
 ## 下载与启动
 
 从本仓库 Releases 下载：
 
-- `Xiaolongbao-Desktop-Office-0.1.1-windows-x64-setup.exe`：当前用户安装，提供开始菜单入口和卸载程序。
-- `Xiaolongbao-Desktop-Office-0.1.1-windows-x64-portable.zip`：完整解压后双击 `WangBun.exe`，保留旁边的 `_internal` 文件夹。
+- `Xiaolongbao-Desktop-Office-0.1.2-windows-x64-setup.exe`：当前用户安装，提供开始菜单入口和卸载程序。
+- `Xiaolongbao-Desktop-Office-0.1.2-windows-x64-portable.zip`：完整解压后双击 `WangBun.exe`，保留旁边的 `_internal` 文件夹。
 
 两种版本均自带 Python、Tk 和图片资源，无需额外安装运行环境。不自动添加开机启动。预览版没有代码签名；`SHA256SUMS.txt` 提供文件校验值。
 
@@ -21,6 +21,8 @@
 - Claude Code 使用自愿安装的通知 hooks；DeepSeekHarness 提供 `desktop-pet/integrations/dsh/wang-bun.mjs` 插件。TUI 不推测已读，可在面板确认。
 - Cursor 精确会话跳转需要附带的扩展源码：运行 `python desktop-pet/integrations/cursor/build_vsix.py`，再在 Cursor 中安装生成的 VSIX。
 - 完成未读的小包子保留在大望包身边；原软件确认已读后停留 9 秒再离开。任务再次运行时重新分配共享工位。
+- 归档会话也会收工离开，不再被未读蓝点唤回；不修改原软件的已读状态。其他接入可发送 `archived` / `unarchived` 事件。
+- 断线时推开电脑、趴下并冒出小幽灵，恢复连接后继续工作。大包子在全部已读后可以与猫咪下棋。
 - 订阅与助手设置支持 RSS/Atom、IMAP SSL 邮件标题、项目通知，以及用户自行配置的 OpenAI 兼容接口聊天与选中通知摘要。
 
 GUI 集成依赖各软件的本地状态格式；升级后可能需要适配。DeepSeekHarness 插件已做事件适配测试，尚未完成真实宿主联调。软件不会替用户批准 Agent 的操作。

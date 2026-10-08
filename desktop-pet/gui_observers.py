@@ -24,13 +24,13 @@ def cursor_rows(path):
             json_extract(h.value,'$.name'),json_extract(k.value,'$.status'),
             json_extract(h.value,'$.hasUnreadMessages'),
             COALESCE(json_extract(k.value,'$.latestChatGenerationUUID'),json_extract(k.value,'$.chatGenerationUUID')),
-            h.lastUpdatedAt,json_extract(h.value,'$.hasBlockingPendingActions')
+            h.lastUpdatedAt,json_extract(h.value,'$.hasBlockingPendingActions'),COALESCE(h.isArchived,0)
             FROM composerHeaders h LEFT JOIN cursorDiskKV k ON k.key='composerData:'||h.composerId
-            WHERE COALESCE(h.isArchived,0)=0 AND COALESCE(json_extract(h.value,'$.isDraft'),0)=0''').fetchall()
+            WHERE COALESCE(json_extract(h.value,'$.isDraft'),0)=0''').fetchall()
         mapping={'generating':'running','completed':'completed','aborted':'cancelled','error':'failed','failed':'failed'}
         return [dict(id=i,label=label or 'Cursor · '+i[:8],state='waiting' if waiting and status=='generating' else mapping.get(status),
-                     unread=bool(unread) if unread in (0,1) else None,run=run,updated=(updated or 0)/1000)
-                for i,label,status,unread,run,updated,waiting in rows]
+                     unread=bool(unread) if unread in (0,1) else None,run=run,updated=(updated or 0)/1000,archived=bool(archived))
+                for i,label,status,unread,run,updated,waiting,archived in rows]
     finally:db.close()
 
 
@@ -38,12 +38,12 @@ def zcode_rows(path):
     db=readonly(path)
     try:
         rows=db.execute('''SELECT task_id,title,task_status,unread_at,last_unread_at,updated_at,workspace_path,
-            json_extract(meta_json,'$.runId') FROM tasks WHERE archived=0 AND deleted=0''').fetchall()
+            json_extract(meta_json,'$.runId'),archived,deleted FROM tasks''').fetchall()
         mapping={'running':'running','waiting':'waiting','completed':'completed','error':'failed',
                  'failed':'failed','cancelled':'cancelled','canceled':'cancelled','idle':'idle'}
         return [dict(id=i,label=label or 'ZCode · '+i[:8],state=mapping.get(status),unread=unread is not None,
-                     run=run,terminal_marker=marker,updated=(updated or 0)/1000,workspace=workspace)
-                for i,label,status,unread,marker,updated,workspace,run in rows]
+                     run=run,terminal_marker=marker,updated=(updated or 0)/1000,workspace=workspace,archived=bool(archived or deleted))
+                for i,label,status,unread,marker,updated,workspace,run,archived,deleted in rows]
     finally:db.close()
 
 
@@ -57,9 +57,11 @@ class GuiObservers:
         self.initial=set()
 
     def project(self,source,row):
-        if not row.get('state') or not isinstance(row.get('id'),str):return
+        if not isinstance(row.get('id'),str):return
         key=task_key({'source':source,'thread_id':row['id']})
         if not self.store.enabled(source,key):return
+        if 'archived' in row:self.store.set_archived(key,row['archived'])
+        if row.get('archived') or not row.get('state'):return
         old=self.cursors.get(key,{})
         task=self.store.task(key)
         state=row['state']

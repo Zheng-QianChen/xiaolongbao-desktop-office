@@ -10,7 +10,8 @@ import uuid
 from presentation_layout import PresentationLayout
 
 KINDS = {'started', 'working', 'waiting', 'resolved', 'completed', 'failed',
-         'cancelled', 'idle', 'disconnected', 'connected', 'heartbeat', 'message', 'metadata'}
+         'cancelled', 'idle', 'disconnected', 'connected', 'heartbeat', 'message', 'metadata',
+         'archived', 'unarchived'}
 TERMINAL = {'completed', 'failed', 'cancelled'}
 FIELDS = {'event_id', 'source', 'thread_id', 'agent_id', 'run_id', 'kind',
           'label', 'summary', 'request_id', 'sequence', 'heartbeat_timeout',
@@ -177,6 +178,9 @@ class Store:
         with self.lock, self.db:
             task=self.task(key)
             if not task or not self.enabled(task['source'],key):return
+            # Archive is independent of the provider's blue dot. A late read
+            # observation must not cancel departure or resurrect the pet.
+            if task.get('archived'):return
             before=json.dumps(task,sort_keys=True)
             now=self.clock()
             task['managed']=True
@@ -203,12 +207,36 @@ class Store:
                 task.pop('retire_at',None)
             if json.dumps(task,sort_keys=True)!=before:self._put('tasks',task);self._bump()
 
+    def set_archived(self, key, archived):
+        """Apply an explicit provider flag, never infer archive from absence.
+
+        Keep source read state and history intact. Only an explicit unarchive
+        can make this conversation eligible for presentation again.
+        """
+        with self.lock, self.db:
+            task=self.task(key)
+            if not task or bool(task.get('archived'))==archived:return
+            now=self.clock()
+            task['archived']=archived
+            if archived:
+                task.update(archive_at=now,retire_at=now+REUNION_SECONDS,
+                            action_id='archive-'+uuid.uuid4().hex)
+            else:
+                task.pop('retire_at',None)
+                task.pop('archive_at',None)
+                task['action_id']='unarchive-'+uuid.uuid4().hex
+                unread=any(not n['read'] and n['task_id']==key for n in self._all('notices'))
+                if task['state'] in {'running','waiting'} or unread:
+                    if not task.get('present',True):task['slot']=self._free_slot(key)
+                    task['present']=True
+            self._put('tasks',task);self._bump()
+
     def _retire(self):
         now=self.clock()
         with self.db:
             for task in self._all('tasks'):
                 if (task.get('present',True) and task.get('retire_at',float('inf'))<=now
-                        and task['state'] in TERMINAL|{'idle'}):
+                        and (task.get('archived') or task['state'] in TERMINAL|{'idle'})):
                     task['present']=False
                     self._put('tasks',task);self._bump()
 
@@ -251,6 +279,13 @@ class Store:
                 'state_at': now, 'action_id': event['event_id'], 'slot':
                 self._free_slot()}
             kind, run = event['kind'], event.get('run_id') or task['run_id']
+            if kind in {'archived','unarchived'}:
+                if not row:return {'accepted':False,'reason':'unknown_task'}
+                self.set_archived(key,kind=='archived')
+                self.db.execute('INSERT INTO events VALUES (?,?)',(eid,now))
+                return {'accepted':True,'task_id':key}
+            if task.get('archived'):
+                return {'accepted':False,'reason':'archived'}
             new_run = bool(run and run != task['run_id'])
             if row and new_run and 'observed_at' in event and event['observed_at'] < task['state_at']:
                 return {'accepted': False, 'reason': 'stale_observation'}
@@ -367,7 +402,7 @@ class Store:
                                 'local':'通过通知命令或任务包装器接收事件'}[key]}
                      for key,label in SOURCES.items()]
             tasks=[t for t in tasks if settings['sources'].get(t['source'],True) and t['id'] not in settings['disabled_tasks']]
-            active={t['id'] for t in tasks}
+            active={t['id'] for t in tasks if not t.get('archived')}
             notices=[n for n in notices if n['task_id'] in active]
             modes={t['id']:t.get('read_mode','manual') for t in tasks}
             urls={t['id']:t.get('open_url') for t in tasks}
@@ -379,7 +414,11 @@ class Store:
             for task in tasks:
                 offline = (task.get('needs_refresh',False) or not task['online'] or bool(task['heartbeat_timeout'] and
                            now - task['last_seen'] > task['heartbeat_timeout']))
-                task['display_state'] = 'disconnected' if offline else task['state']
+                task['display_state'] = 'completed' if task.get('archived') else 'disconnected' if offline else task['state']
+                if task.get('archived'):
+                    # Presentation clock only: retain the original event time
+                    # in storage for stale-event protection after unarchive.
+                    task['state_at']=task['archive_at']
                 task['unread_ids'] = [n['id'] for n in notices if n['task_id'] == task['id'] and not n['read']]
                 task['bubble'] = next(iter(task['requests'].values()), '')
                 state = task['display_state']

@@ -148,9 +148,13 @@ class CloneObserver:
                     if {'title','archived','updated_at'}<=columns:
                         automatic=True
                         blue_dots=read_blue_dots(home)
-                        rows=discovery.execute('SELECT id,title FROM threads WHERE archived=0 ORDER BY updated_at DESC').fetchall()
+                        rows=discovery.execute('SELECT id,title,archived FROM threads ORDER BY updated_at DESC').fetchall()
                         known={t['id']:t for t in config['threads']}
-                        for ident,label in rows:
+                        for ident,label,archived in rows:
+                            self.store.set_archived(task_key({'source':'codex','thread_id':ident}),bool(archived))
+                            if archived:
+                                known.pop(ident,None)
+                                continue
                             if UUID.fullmatch(ident):known[ident]={'id':ident,'label':label or 'Codex 会话','automatic':True,
                                                                 'unread':ident in (blue_dots or set())}
                         config['threads']=list(known.values())
@@ -173,10 +177,15 @@ class CloneObserver:
                     ident = thread['id']
                     if not UUID.fullmatch(ident) or not isinstance(thread.get('label'), str):
                         raise ValueError('invalid selected conversation')
-                    row = con.execute('SELECT rollout_path FROM threads WHERE id=?', (ident,)).fetchone()
+                    columns={r[1] for r in con.execute('PRAGMA table_info(threads)')}
+                    archive_column='archived' if 'archived' in columns else '0'
+                    row = con.execute('SELECT rollout_path,'+archive_column+' FROM threads WHERE id=?', (ident,)).fetchone()
                     if not row:
                         report['errors'].append({'thread_id': ident, 'reason': 'rollout_not_found'})
                         continue
+                    if 'archived' in columns:
+                        self.store.set_archived(task_key({'source':'codex','thread_id':ident}),bool(row[1]))
+                    if row[1]:continue
                     path_text = row[0]
                     if path_text.startswith('\\\\?\\'):
                         path_text = path_text[4:]

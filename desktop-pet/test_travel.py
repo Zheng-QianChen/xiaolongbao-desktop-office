@@ -113,11 +113,35 @@ class TravelTests(unittest.TestCase):
 
     def test_failed_and_waiting_freeze_typing_without_completing(self):
         board=self.board();w=board.items['0']
-        for status,group in [('waiting','waiting'),('review','waiting'),('failed','failure'),('disconnected','failure')]:
+        for status,group in [('waiting','waiting'),('review','waiting'),('failed','failure'),('disconnected','disconnected')]:
             w.set_state(status,4)
             self.assertEqual(phase_frame(w,4.8,None)[0],group)
             self.assertTrue(w.at_desk)
             self.assertFalse(w.completed)
+
+    def test_disconnect_plays_once_holds_then_recovers_without_reading(self):
+        board=self.board();w=board.items['0'];w.unread=True
+        w.set_state('disconnected',4)
+        self.assertEqual(phase_frame(w,4,None),('disconnected',0))
+        self.assertEqual(phase_frame(w,6,None),('disconnected',24))
+        w.set_state('disconnected',7)
+        self.assertEqual(w.phase_at,4)
+        self.assertEqual(phase_frame(w,60,None),('disconnected',59))
+        w.set_state('running',61)
+        self.assertEqual(phase_frame(w,61,None)[0],'typing')
+        self.assertTrue(w.unread)
+
+    def test_disconnect_freezes_travel_until_reconnection(self):
+        board=self.board();w=board.items['0'];motion=Travel()
+        motion.update(board,[150,220],4,12,.016,3)
+        w.set_state('completed',4);self.advance(board,motion,4,12)
+        w.set_state('running',12);self.advance(board,motion,12,12.3)
+        w.set_state('disconnected',12.3);xy=motion.positions['0'].xy[:]
+        self.advance(board,motion,12.3,18)
+        self.assertEqual(motion.positions['0'].xy,xy)
+        self.assertEqual(phase_frame(w,18,motion.positions['0'])[0],'disconnected')
+        w.set_state('running',18);self.advance(board,motion,18,26)
+        self.assertTrue(w.at_desk)
 
 
 if __name__=='__main__':unittest.main()

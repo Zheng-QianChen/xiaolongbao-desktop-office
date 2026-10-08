@@ -15,6 +15,7 @@ ART_JS = ['renderer.js','geometry.js','layer-turn.js','motions.js']
 def resources(root):
     root = Path(root)
     paths = list((root/'assets/animation-frames-v9').glob('*.png'))
+    paths += list((root/'assets/animation-frames-v10').glob('*/*.png'))
     paths += [root/'assets/closed-laptop-v2.png']
     paths += [p for p in (root/'bridge-ui').iterdir() if p.suffix in ('.js','.html','.css')]
     paths += [root/'layered-poc'/p for p in ART_JS+['rig.json','spatial-rig-v7.json']]

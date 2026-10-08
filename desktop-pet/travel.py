@@ -2,6 +2,7 @@
 import math
 from dataclasses import dataclass
 from presentation_layout import reunion_offset
+from asset_config import extended_frame
 
 SPEED=105.0
 
@@ -38,6 +39,9 @@ class Travel:
                 initial=target if worker.phase=='following' else desk
                 self.positions[key]=Position(initial[:])
             pos=self.positions[key]
+            if worker.state=='disconnected':
+                pos.moving=False
+                continue
             dx,dy=target[0]-pos.xy[0],target[1]-pos.xy[1]
             distance=math.hypot(dx,dy)
             step=min(distance,SPEED*max(0,min(.25,dt)))
@@ -47,12 +51,15 @@ class Travel:
                 pos.gait+=step/SPEED
             if distance<=step+.6:
                 pos.xy[:]=target
-                worker.arrive(now)
+                if worker.phase!='returning' or now-worker.phase_at>=4.5:
+                    worker.arrive(now)
 
 def phase_frame(worker,now,position):
     """One frame policy shared by playback and previews."""
     age=max(0,now-worker.phase_at)
-    if position and position.moving:return 'walk',int(position.gait*10)%8
+    if worker.state=='disconnected':return extended_frame('disconnected',age)
+    if worker.phase=='returning':return extended_frame('return',age)
+    if position and position.moving:return extended_frame('walk',age)
     phase=worker.phase
     if phase in {'departing','following','returning'}:return 'rest',0
     if phase=='closing':
@@ -69,6 +76,6 @@ def phase_frame(worker,now,position):
         if worker.state in {'waiting','review'}:
             t=age%4
             return 'waiting',min(3,int(t/.6*4)) if t<.6 else 3
-        if worker.state in {'failed','disconnected'}:return 'failure',min(3,int(age/.9*4))
+        if worker.state=='failed':return 'failure',min(3,int(age/.9*4))
         return 'waiting',0
     return 'rest',0

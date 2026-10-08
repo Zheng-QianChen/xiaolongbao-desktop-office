@@ -18,6 +18,7 @@ from native_labels import elide,sign_text,wrap_details
 from native_zoom import ZoomCanvas,SCALE_LEVELS
 from presentation_layout import PresentationLayout,reunion_offset
 from asset_config import FRAME_WIDTH,FRAME_HEIGHT,LEFT_PADDING,OUT,COUNTS
+from asset_config import EXTENDED,EXTENDED_SIZE,EXTENDED_ORIGIN,EXTENDED_CLIPS,extended_frame
 from app_paths import APP_NAME,runtime_dir
 
 ROOT = Path(__file__).resolve().parent
@@ -50,6 +51,7 @@ def main():
     workers=Workers()
     bridge=None
     bridge_snapshot=None
+    bridge_offline=False
     settings_window=None
     show_labels=True
     if args.bridge:
@@ -76,9 +78,16 @@ def main():
     toolbar_font=tkfont.Font(root=root,family='Microsoft YaHei UI',size=-12)
     groups={}
     leader_groups={}
+    leader_bounds={}
     for name,count in COUNTS.items():
         groups[name]=[ImageTk.PhotoImage(pixel_sprite(Image.open(FRAMES/f'{name}-{i:02}.png'),(SMALL_WIDTH,SMALL))) for i in range(count)]
         leader_groups[name]=[ImageTk.PhotoImage(pixel_sprite(Image.open(FRAMES/f'{name}-{i:02}.png'),(BIG_WIDTH,BIG))) for i in range(count)]
+    for name,(count,_) in EXTENDED_CLIPS.items():
+        groups[name]=[ImageTk.PhotoImage(pixel_sprite(Image.open(EXTENDED/name/f'{i:03}.png'),
+                     tuple(round(v/3) for v in EXTENDED_SIZE))) for i in range(count)]
+        if name in {'disconnected','read'}:
+            leader_groups[name]=[ImageTk.PhotoImage(pixel_sprite(Image.open(EXTENDED/name/f'{i:03}.png'),EXTENDED_SIZE)) for i in range(count)]
+            leader_bounds[name]=[Image.open(EXTENDED/name/f'{i:03}.png').getchannel('A').getbbox() for i in range(count)]
     rest_image=Image.open(FRAMES/'rest.png')
     rest=ImageTk.PhotoImage(pixel_sprite(rest_image,(SMALL_WIDTH,SMALL)))
     big=ImageTk.PhotoImage(pixel_sprite(rest_image,(BIG_WIDTH,BIG)))
@@ -124,6 +133,8 @@ def main():
         root.destroy()
     root.report_callback_exception=callback_error
     alert_started=None
+    previous_unread=0
+    read_started=-100
     drag=[0,0]
     dragging=None
     desk_cols=max(1,min(3,(root.winfo_screenwidth()-380)//110))
@@ -399,7 +410,7 @@ def main():
         return item
 
     def tick():
-        nonlocal stage,last_tick,last_layout,page,alert_started,last_report,saved_visual,bridge_snapshot,show_labels,dragging
+        nonlocal stage,last_tick,last_layout,page,alert_started,last_report,saved_visual,bridge_snapshot,show_labels,dragging,bridge_offline,previous_unread,read_started
         now=clock()
         playback['ticks']+=1
         dt=min(.25,now-last_tick)
@@ -426,9 +437,13 @@ def main():
             if received is not None:
                 if settings_window and settings_window.exists():settings_window.update(received)
                 if received.get('offline'):
-                    for worker in workers.items.values():worker.set_state('disconnected',now)
+                    bridge_offline=True
+                    archived={t['id'] for t in (bridge_snapshot or {}).get('tasks',[]) if t.get('archived')}
+                    for worker in workers.items.values():
+                        if worker.key not in archived:worker.set_state('disconnected',now)
                     canvas.itemconfigure(footer,text='本地通知桥未连接 · 正在重试')
                 else:
+                    bridge_offline=False
                     bridge_snapshot=received
                     canvas.itemconfigure(footer,text='双击小包子打开会话 · 已读跟随原软件')
                     preferences=received.get('settings',{})
@@ -504,13 +519,17 @@ def main():
             if scene.mode=='house':draw_house(canvas,desk_cols,max(2,rows))
             else:canvas.delete('house')
             last_layout=layout
-        overall=workers.overall_state
+        overall='disconnected' if bridge_offline else workers.overall_state
+        if previous_unread and not workers.unread_count and overall=='idle':read_started=now
+        previous_unread=workers.unread_count
         leader_worker.set_state(overall if overall!='unread' else 'idle',now)
         leader_worker.update(now)
         hop=math.sin(elapsed*1.7)
         leader_y=leader[1]+hop
         leader_frame=big
-        if workers.unread_count:
+        leader_group='rest'
+        alerting=bool(workers.unread_count and overall!='disconnected')
+        if alerting:
             if alert_started is None:alert_started=now
             leader_frame,hop,sx,sy=bounce_frames[int(((now-alert_started)%CYCLE)/CYCLE*96)%96]
             # Scale about the actual foot baseline, not the image centre.
@@ -522,9 +541,24 @@ def main():
             canvas.itemconfigure(alert,state='hidden')
             if overall!='idle':
                 group,index=phase_frame(leader_worker,now,None)
+                leader_group=group
                 leader_frame=leader_groups[group][index] if group!='rest' else big
+            elif now-read_started<8:
+                leader_group,index=extended_frame('read',now-read_started)
+                leader_frame=leader_groups[leader_group][index]
         canvas.itemconfigure(leader_sprite,image=leader_frame)
-        canvas.coords(leader_sprite,leader[0],leader_y)
+        padded=leader_group in EXTENDED_CLIPS
+        # The laptop is pushed left of the ordinary body canvas. Ease into a
+        # safe margin rather than clipping it at the desktop window's edge.
+        overflow_x=0
+        if leader_group=='disconnected':
+            u=min(1,max(0,(now-leader_worker.phase_at-.15)/.7))
+            overflow_x=max(0,64-(leader[0]-BIG_WIDTH/2))*u*u*(3-2*u)
+        elif leader_group=='read':
+            u=min(1,max(0,(now-read_started-1)/.9))
+            overflow_x=max(0,26-(leader[0]-BIG_WIDTH/2))*u*u*(3-2*u)
+        canvas.coords(leader_sprite,leader[0]+overflow_x+(EXTENDED_SIZE[0]/2-EXTENDED_ORIGIN[0]-BIG_WIDTH/2 if padded else 0),
+                      leader_y+(EXTENDED_SIZE[1]/2-EXTENDED_ORIGIN[1]-BIG/2 if padded else 0))
         for j,ident in enumerate(leader_flower):
             angle=elapsed*2.2+j*math.tau/8
             cx,cy=leader[0]-22,leader[1]-99+hop
@@ -533,7 +567,8 @@ def main():
                                  fill=['#096c78','#098593','#10a4ad','#18bec5','#43d2d7','#7be2e4','#49c4ca','#25a8b5'][j])
         canvas.itemconfigure(summary,text=('演示 · ' if args.demo else '')+LABELS[overall]+(f' ({workers.unread_count})' if workers.unread_count else ''))
         # Attach status to the visible animated feet, including the unread bounce.
-        feet=leader_y+foot_offset*(sy if workers.unread_count else 1)
+        feet=leader_y+foot_offset*(sy if alerting else 1)
+        if padded:feet=leader_y-BIG/2-EXTENDED_ORIGIN[1]+leader_bounds[leader_group][index][3]
         canvas.coords(summary,leader[0],min(h-38,feet+18))
         sx1,sy1,sx2,sy2=canvas.bbox(summary)
         canvas.coords(summary_box,sx1-7,sy1-4,sx2+7,sy2+4)
@@ -582,7 +617,8 @@ def main():
                         cx,cy=x+33,y+10
                         canvas.coords(ident,cx+math.cos(a)*2.5,cy+math.sin(a)*2.5,cx+math.cos(a)*7,cy+math.sin(a)*7)
                         canvas.itemconfigure(ident,state='normal',fill=['#096c78','#098593','#10a4ad','#18bec5','#43d2d7','#7be2e4','#49c4ca','#25a8b5'][j])
-            canvas.coords(item['sprite'],x-SMALL_LEFT_PADDING,y)
+            canvas.coords(item['sprite'],x-SMALL_LEFT_PADDING-(EXTENDED_ORIGIN[0]/3 if group in EXTENDED_CLIPS else 0),
+                          y-(EXTENDED_ORIGIN[1]/3 if group in EXTENDED_CLIPS else 0)-(16 if group=='disconnected' else 0))
             canvas.itemconfigure(item['sprite'],image=frame,state='normal')
             label_x,label_y=(dx,dy) if scene.mode=='house' else (dx,max(65,dy))
             canvas.coords(item['plate'],label_x-10,label_y+84,label_x+95,label_y+126)
@@ -607,7 +643,7 @@ def main():
             top=y+bounds[1]/rest_image.height*SMALL
             bottom=y+bounds[3]/rest_image.height*SMALL
             if sx1<right and sx2>left and sy1<bottom and sy2>top:
-                head=leader_y+head_offset*(sy if workers.unread_count else 1)
+                head=leader_y+head_offset*(sy if alerting else 1)
                 canvas.coords(summary,leader[0],max(85,head-22))
                 sx1,sy1,sx2,sy2=canvas.bbox(summary)
                 canvas.coords(summary_box,sx1-7,sy1-4,sx2+7,sy2+4)

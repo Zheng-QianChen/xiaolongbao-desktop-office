@@ -81,6 +81,42 @@ class LifecycleTests(unittest.TestCase):
         self.assertIn('retire_at',self.store.task(key))
         self.now+=REUNION_SECONDS+1;self.assertEqual(self.store.snapshot()['tasks'],[])
 
+    def test_archive_overrides_unread_and_disconnect_without_marking_read(self):
+        key=self.event('started');self.event('completed');self.event('disconnected')
+        self.store.sync_presentation(key,unread=True,read_mode='app')
+        original=self.store.task(key)['state_at']
+        self.event('archived')
+        departure=self.store.task(key)['retire_at']
+        self.now+=4
+        self.store.sync_presentation(key,unread=True,read_mode='app')
+        self.store.sync_presentation(key,unread=None,read_mode='app')
+        self.event('archived')  # does not extend the grace period
+        snap=self.store.snapshot()
+        self.assertEqual(snap['unread_count'],0)
+        self.assertEqual(snap['tasks'][0]['display_state'],'completed')
+        self.assertIsNone(snap['tasks'][0]['desk_slot'])
+        self.assertEqual(self.store.task(key)['retire_at'],departure)
+        self.assertEqual(self.store.task(key)['state_at'],original)
+        self.assertFalse(self.store._all('notices')[0]['read'])
+        self.now+=REUNION_SECONDS
+        self.assertEqual(self.store.snapshot()['tasks'],[])
+        self.store.close();self.store=Store(self.root/'state.sqlite',clock=lambda:self.now)
+        for kind in ['connected','working','started']:
+            result=self.store.ingest(make_event('codex','a',kind,run_id='new'))
+            self.assertEqual(result['reason'],'archived')
+        self.store.sync_presentation(key,unread=True,read_mode='app')
+        self.assertEqual(self.store.snapshot()['tasks'],[])
+        self.event('unarchived')
+        self.assertEqual(len(self.store.snapshot()['tasks']),1)
+        self.assertEqual(self.store.snapshot()['unread_count'],1)
+
+    def test_archive_running_releases_slot_even_without_completion(self):
+        key=self.event('started');slot=self.store.task(key)['slot']
+        self.event('archived');self.now+=REUNION_SECONDS+1
+        self.assertEqual(self.store.snapshot()['tasks'],[])
+        other=self.event('started','b')
+        self.assertEqual(self.store.task(other)['slot'],slot)
+
 class BlueDotTests(unittest.TestCase):
     def test_identity_scope_and_ambiguous_host_are_not_merged(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -171,6 +207,29 @@ class DiscoveryTests(unittest.TestCase):
             store=Store(runtime/'state.sqlite');observer=CloneObserver(runtime,store);observer.poll(force=True)
             self.assertEqual(store.snapshot()['tasks'][0]['label'],'自动发现')
             self.assertEqual(store.snapshot()['tasks'][0]['state'],'running')
+            with sqlite3.connect(home/'state_5.sqlite') as db:
+                db.execute('UPDATE threads SET archived=1,rollout_path=?',('not-present-after-archive',))
+            db.close()
+            observer.poll(force=True)
+            self.assertTrue(store.snapshot()['tasks'][0]['archived'])
+            self.assertEqual(store.snapshot()['unread_count'],0)
+            store.close()
+
+    def test_gui_archive_is_explicit_and_missing_database_cannot_archive(self):
+        with tempfile.TemporaryDirectory() as directory:
+            store=Store(Path(directory)/'state.sqlite');observer=GuiObservers(directory,store)
+            for source in ['cursor','zcode']:
+                row=dict(id='gui-archive',label='演示任务',state='running',unread=True,updated=1,run='one',archived=False)
+                observer.project(source,row)
+                key=task_key({'source':source,'thread_id':row['id']})
+                observer.unavailable(source)
+                self.assertFalse(store.task(key).get('archived',False))
+                row.update(archived=True,state=None)
+                observer.project(source,row)
+                self.assertTrue(store.task(key)['archived'])
+                row.update(archived=False,state='running')
+                observer.project(source,row)
+                self.assertFalse(store.task(key)['archived'])
             store.close()
     def test_gui_baseline_ignores_old_read_tasks_then_starts_new_turn(self):
         with tempfile.TemporaryDirectory() as directory:
