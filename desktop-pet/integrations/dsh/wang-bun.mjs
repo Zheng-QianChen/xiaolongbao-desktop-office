@@ -18,17 +18,27 @@ export function project(session,event){
     ...(Number.isFinite(event.time)?{observed_at:event.time/1000}:{})};
 }
 
-export function apply(ctx,config={}){
-  const inbox=join(resolve(config.runtime??defaultRuntime),'inbox');
+export function createInboxWriter({runtime,logger}={}){
+  const inbox=join(resolve(runtime??defaultRuntime),'inbox');
   let pending=Promise.resolve();
-  ctx.on('session/event',(session,event)=>{
-    const record=project(session,event);if(!record)return;
-    // Serialize our own writes. The event bus and agent turn never await I/O.
+  // One writer serializes its own files; concurrent events cannot interleave temp files.
+  const write=(record)=>{
     pending=pending.then(async()=>{
       await mkdir(inbox,{recursive:true});
       const target=join(inbox,`${String(BigInt(Date.now())*1000000n).padStart(20,'0')}-${randomUUID()}.json`);
       await writeFile(target+'.tmp',JSON.stringify(record),{flag:'wx'});
       await rename(target+'.tmp',target);
-    }).catch(()=>ctx.logger?.warn('望包本地通知暂未写入；Agent 继续运行。'));
+    }).catch(()=>logger?.warn('望包本地通知暂未写入；Agent 继续运行。'));
+    return pending;
+  };
+  return {inbox,write,flush:()=>pending};
+}
+
+export function apply(ctx,config={}){
+  const writer=createInboxWriter({runtime:config.runtime,logger:ctx.logger});
+  ctx.on('session/event',(session,event)=>{
+    const record=project(session,event);if(!record)return;
+    // The event bus and agent turn never await I/O; writes stay in arrival order.
+    void writer.write(record);
   });
 }
