@@ -89,7 +89,7 @@ node --test desktop-pet/integrations/dsh/tests/wang-bun.test.mjs
 以下步骤用于后续的真实宿主联调。执行前先退出相关 DSH 会话或选一个不影响工作的 profile；不要在自检阶段改动用户常驻服务。
 
 1. 确认 DSH 版本与插件文件。插件使用 Cordis `{name, inject, apply}` 形状，本机只读确认于 DSH `0.2.1-rc.3`。
-2. 找到 DSH profile 目录：Windows 为 `%USERPROFILE%\.dsh\profiles\<profile>`，Linux/macOS 为 `$DSH_HOME/profiles/<profile>`（默认 `~/.dsh`）。要加装插件的 profile 应包含 `package.json` 与 `cordis.patch.yml`；`cordis.yml` 是 DSH 管理的空根，不要手改。
+2. 找到 DSH home 的 profile 目录：默认 `~/.dsh/profiles/<profile>`（可用 `$DSH_HOME` 覆盖；Windows 通常为 `%USERPROFILE%\.dsh\profiles\<profile>`）。要加装插件的 profile 应包含 `package.json` 与 `cordis.patch.yml`；`cordis.yml` 是 DSH 管理的空根，不要手改。
 3. 把 `desktop-pet/integrations/dsh/wang-bun.mjs` 放进该 profile 目录，或使用绝对 `file:///` URL。然后在 `cordis.patch.yml` 增加一行（`id` 在 profile 内唯一）：
 
    ```yaml
